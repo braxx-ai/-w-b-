@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <link rel="stylesheet" href="rrr.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini Music Player — reconocimiento automático</title>
+
+  <!-- jsmediatags para leer metadatos (portada incrustada) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.5/dist/jsmediatags.min.js"></script>
+</head>
+<body>
+   <h1 align="center">MUSIC DEFENDER STUDIOS</h1>
+   <center> <div class="small">Music Defender Studios, es una pagina de codigo libre estilo Linux, donde podes modificar el titulo el artista las imagenes y agregarle personalizaciones que quieras.</div></center>
+  <div class="bg" id="bg"></div>
+  <div class="bg-overlay" aria-hidden="true"></div>
+
+  <div class="app">
+    <div class="player" role="region" aria-label="Reproductor de música">
+      <div class="center">
+        <div class="cover" id="coverWrap" title="Arrastra una imagen sobre la portada para cambiarla">
+          <img id="coverImg" src="https://images.unsplash.com/photo-1526178615246-3f8f663f1b9b?q=80&w=1200&auto=format&fit=crop" alt="Portada">
+          <div class="cover-overlay">
+            <button id="changeCoverBtn" title="Cambiar portada">Cambiar portada</button>
+            <input id="coverInput" type="file" accept="image/*" style="display:none">
+          </div>
+        </div>
+
+        <div class="titles" aria-live="polite">
+          <div class="song-title" id="songTitle">Título de la canción</div>
+          <div class="song-artist" id="songArtist">Nombre del artista</div>
+
+          <div class="controls" role="group" aria-label="Controles">
+            <button id="prevBtn" class="control" title="Anterior">◀◀</button>
+            <button id="playBtn" class="control play" title="Reproducir / Pausar">▶</button>
+            <button id="nextBtn" class="control" title="Siguiente">▶▶</button>
+            <div style="flex:1"></div>
+          </div>
+
+          <div style="margin-top:8px">
+            <button id="openEditBtn" class="control" title="Editar metadata manualmente">Editar metadata</button>
+          </div>
+        </div>
+      </div>
+
+      <aside class="playlist" id="playlist" aria-label="Lista de canciones">
+        <div class="playlist-header">
+          <strong style="font-size:0.95rem">Lista de canciones</strong>
+          <div>
+            <label class="import-btn" id="importLabel" title="Importar archivos de audio" style="user-select:none;cursor:pointer">
+              Importar canciones
+              <input id="fileInput" type="file" accept="audio/*" multiple style="display:none">
+            </label>
+            <button id="clearStorage" class="import-btn" title="Borrar lista guardada" style="margin-left:8px">Borrar guardado</button>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <audio id="audio" preload="metadata"></audio>
+
+  <script>
+    // ---------------------------
+    // CONFIG / URL DEL SERVIDOR DE RECONOCIMIENTO
+    // Cambia si tu server está en otra URL/puerto.
+    // ---------------------------
+    const RECOGNIZE_ENDPOINT = '/recognize'; // por defecto mismo origen (http://localhost:3000/recognize)
+    const DEFAULT_COVER = "https://images.unsplash.com/photo-1526178615246-3f8f663f1b9b?q=80&w=1200&auto=format&fit=crop";
+    const DEFAULT_SAMPLES = [];
+
+    // ---------------------------
+    // STATE & DOM refs
+    // ---------------------------
+    let songs = [];
+    const audio = document.getElementById('audio');
+    const coverImg = document.getElementById('coverImg');
+    const coverWrap = document.getElementById('coverWrap');
+    const bg = document.getElementById('bg');
+    const songTitle = document.getElementById('songTitle');
+    const songArtist = document.getElementById('songArtist');
+    const playlistEl = document.getElementById('playlist');
+    const playBtn = document.getElementById('playBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    const fileInput = document.getElementById('fileInput');
+    const importLabel = document.getElementById('importLabel');
+    const coverInput = document.getElementById('coverInput');
+    const changeCoverBtn = document.getElementById('changeCoverBtn');
+    const clearStorageBtn = document.getElementById('clearStorage');
+    const openEditBtn = document.getElementById('openEditBtn');
+
+    let current = 0;
+    let isPlaying = false;
+
+    // IndexedDB helpers (copiado del ejemplo anterior)
+    const DB_NAME = 'music-player-db';
+    const DB_STORE = 'files';
+    let dbPromise = null;
+    function openDB(){ if(dbPromise) return dbPromise; dbPromise = new Promise((resolve,reject)=>{ const req = indexedDB.open(DB_NAME,1); req.onupgradeneeded = ()=>{ const db=req.result; if(!db.objectStoreNames.contains(DB_STORE)) db.createObjectStore(DB_STORE,{keyPath:'id'}); }; req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error); }); return dbPromise; }
+    async function saveFileToDB(file){ const db=await openDB(); return new Promise((resolve,reject)=>{ const tx=db.transaction(DB_STORE,'readwrite'); const store=tx.objectStore(DB_STORE); const id='file-'+Date.now()+'-'+Math.random().toString(36).slice(2,8); const putReq = store.put({id,blob:file}); putReq.onsuccess = ()=> resolve(id); putReq.onerror = ()=> reject(putReq.error); }); }
+    async function getFileFromDB(id){ const db=await openDB(); return new Promise((resolve,reject)=>{ const tx=db.transaction(DB_STORE,'readonly'); const store=tx.objectStore(DB_STORE); const getReq = store.get(id); getReq.onsuccess = ()=> { if(getReq.result) resolve(getReq.result.blob); else resolve(null); }; getReq.onerror = ()=> reject(getReq.error); }); }
+    const idbUrlCache = new Map();
+    async function getUrlForIdbKey(key){ if(idbUrlCache.has(key)) return idbUrlCache.get(key); const blob = await getFileFromDB(key); if(!blob) return null; const url = URL.createObjectURL(blob); idbUrlCache.set(key,url); return url; }
+
+    // ---------------------------
+    // RENDER / UI
+    // ---------------------------
+    function renderPlaylist(){
+      const header = playlistEl.querySelector('.playlist-header');
+      playlistEl.innerHTML = '';
+      if(header) playlistEl.appendChild(header);
+
+      songs.forEach((s,i)=>{
+        const tr = document.createElement('div');
+        tr.className = 'track';
+        tr.tabIndex = 0;
+        tr.dataset.index = i;
+
+        const coverSrc = s.cover || DEFAULT_COVER;
+        const recognizingHtml = s.recognizing ? `<span class="recognizing">Reconociendo...</span>` : '';
+        tr.innerHTML = `
+          <div class="t-cover"><img src="${coverSrc}" alt="${escapeHtml(s.title)} — portada" style="width:100%;height:100%;object-fit:cover"></div>
+          <div class="meta">
+            <div class="t-title">${escapeHtml(s.title || 'Sin título')} ${recognizingHtml}</div>
+            <div class="t-artist">${escapeHtml(s.artist || 'Desconocido')}</div>
+          </div>
+        `;
+        tr.addEventListener('click', ()=> loadSong(i,true));
+        tr.addEventListener('keydown', (e)=>{ if(e.key==='Enter') loadSong(i,true); });
+
+        // context menu: cambiar portada (solo UI)
+        tr.addEventListener('contextmenu', (ev)=>{
+          ev.preventDefault();
+          const choice = confirm('¿Cambiar portada de esta pista desde archivo de imagen?');
+          if(choice){
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.accept = 'image/*';
+            inp.onchange = async ()=>{
+              const f = inp.files[0];
+              if(!f) return;
+              const dataUrl = await fileToDataURL(f);
+              songs[i].cover = dataUrl;
+              savePlaylistToStorage();
+              renderPlaylist();
+              if(current===i){
+                coverImg.src = dataUrl;
+                bg.style.backgroundImage = `url('${dataUrl}')`;
+              }
+            };
+            inp.click();
+          }
+        });
+
+        playlistEl.appendChild(tr);
+      });
+      highlightActive();
+    }
+
+    function highlightActive(){
+      document.querySelectorAll('.track').forEach(el => {
+        el.classList.toggle('active', Number(el.dataset.index) === current);
+      });
+    }
+
+    // Resolver src
+    async function resolveSrc(s){
+      if(!s || !s.src) return null;
+      if(typeof s.src !== 'string') return s.src;
+      if(s.src.startsWith('idb:')){
+        const key = s.src.slice(4);
+        const url = await getUrlForIdbKey(key);
+        return url;
+      }
+      return s.src;
+    }
+
+    // Cargar canción
+    async function loadSong(index, playNow=false){
+      if(songs.length===0) return;
+      if(index<0) index = songs.length-1;
+      if(index>=songs.length) index = 0;
+      current = index;
+      const s = songs[index];
+
+      coverImg.src = s.cover || DEFAULT_COVER;
+      coverImg.alt = (s.title||'Sin título') + ' — Portada';
+      songTitle.textContent = s.title || 'Sin título';
+      songArtist.textContent = s.artist || 'Desconocido';
+
+      bg.style.opacity = 0;
+      setTimeout(()=>{ bg.style.backgroundImage = `url('${s.cover||DEFAULT_COVER}')`; bg.style.opacity = 1; }, 180);
+
+      const resolved = await resolveSrc(s);
+      if(!resolved) audio.removeAttribute('src'); else audio.src = resolved;
+      audio.dataset.current = index;
+      highlightActive();
+      if(playNow) play(); else pause();
+    }
+
+    // PLAYER functions
+    function play(){ audio.play().then(()=>{ isPlaying=true; playBtn.textContent='⏸'; coverImg.classList && coverImg.classList.add('playing'); }).catch(err=>{ isPlaying=false; playBtn.textContent='▶'; console.warn(err); }); }
+    function pause(){ audio.pause(); isPlaying=false; playBtn.textContent='▶'; coverImg.classList && coverImg.classList.remove('playing'); }
+    function togglePlay(){ if(isPlaying) pause(); else play(); }
+
+    playBtn.addEventListener('click', togglePlay);
+    prevBtn.addEventListener('click', ()=> loadSong(current-1,true));
+    nextBtn.addEventListener('click', ()=> loadSong(current+1,true));
+    audio.addEventListener('ended', ()=> loadSong(current+1,true));
+    audio.addEventListener('play', ()=> { isPlaying=true; playBtn.textContent='⏸'; });
+    audio.addEventListener('pause', ()=> { isPlaying=false; playBtn.textContent='▶'; });
+
+    // ---------------------------
+    // IMPORT & DnD + RECOGNITION
+    // ---------------------------
+    fileInput.addEventListener('change', (e)=> handleFileList(Array.from(e.target.files)));
+    ['dragenter','dragover'].forEach(evt => { playlistEl.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); playlistEl.classList.add('dragover'); }); });
+    ['dragleave','dragend','drop'].forEach(evt => { playlistEl.addEventListener(evt, (e)=>{ e.preventDefault(); e.stopPropagation(); if(evt==='drop'){ const items = e.dataTransfer.files ? Array.from(e.dataTransfer.files) : []; handleFileList(items); } playlistEl.classList.remove('dragover'); }); });
+
+    async function handleFileList(files){
+      const audioFiles = files.filter(f => f.type.startsWith('audio/') || f.name.match(/\.(mp3|m4a|wav|ogg|opus|flac)$/i));
+      if(audioFiles.length===0) return;
+      const firstNewIndex = songs.length;
+      for(const file of audioFiles){
+        const tempUrl = URL.createObjectURL(file);
+        const guess = parseFilenameForTitleArtist(file.name);
+        const songObj = {
+          title: guess.title || (file.name.replace(/\.[^/.]+$/, "")),
+          artist: guess.artist || 'Desconocido',
+          cover: DEFAULT_COVER,
+          src: tempUrl,
+          _tempObjUrl: tempUrl,
+          _savedKey: null,
+          recognizing: false
+        };
+        songs.push(songObj);
+        renderPlaylist();
+        savePlaylistToStorage();
+
+        // 1) intentar leer metadatos con jsmediatags
+        let metaFound = false;
+        if(window.jsmediatags && typeof window.jsmediatags.read === 'function'){
+          try {
+            songObj.recognizing = true;
+            renderPlaylist();
+            await new Promise((res) => {
+              window.jsmediatags.read(file, {
+                onSuccess: function(tag){
+                  if(tag && tag.tags){
+                    if(tag.tags.title) songObj.title = tag.tags.title;
+                    if(tag.tags.artist) songObj.artist = tag.tags.artist;
+                    if(tag.tags.picture){
+                      const base64 = pictureToBase64(tag.tags.picture);
+                      songObj.cover = 'data:' + (tag.tags.picture.format || 'image/jpeg') + ';base64,' + base64;
+                    }
+                    metaFound = true;
+                  }
+                  songObj.recognizing = false;
+                  renderPlaylist();
+                  savePlaylistToStorage();
+                  res();
+                },
+                onError: function(err){
+                  songObj.recognizing = false;
+                  renderPlaylist();
+                  console.warn('jsmediatags error', err);
+                  res();
+                }
+              });
+            });
+          } catch(e){
+            songObj.recognizing = false;
+            renderPlaylist();
+            console.warn('jsmediatags threw', e);
+          }
+        }
+
+        // 2) si no halló metadata, intentar reconocimiento vía servidor (AudD/ACRCloud)
+        if(!metaFound){
+          try {
+            songObj.recognizing = true;
+            renderPlaylist();
+            const recog = await recognizeViaServer(file);
+            if(recog && recog.title){
+              // actualizar con lo que venga del servicio
+              songObj.title = recog.title || songObj.title;
+              songObj.artist = recog.artist || songObj.artist;
+              if(recog.cover) songObj.cover = recog.cover;
+              metaFound = true;
+              renderPlaylist();
+              savePlaylistToStorage();
+            }
+          } catch(err){
+            console.warn('Reconocimiento falló:', err);
+          } finally {
+            songObj.recognizing = false;
+            renderPlaylist();
+          }
+        }
+
+        // 3) Guardar blob en IndexedDB para persistencia (si es posible)
+        try {
+          const key = await saveFileToDB(file);
+          songObj.src = 'idb:' + key;
+          songObj._savedKey = key;
+          if(songObj._tempObjUrl){ try{ URL.revokeObjectURL(songObj._tempObjUrl); } catch(e){} delete songObj._tempObjUrl; }
+          savePlaylistToStorage();
+        } catch(err){
+          console.warn('No se pudo guardar archivo en IndexedDB:', err);
+          // dejamos objectURL si DG falla
+        }
+      }
+
+      // si no hay reproducción en curso, iniciar con la primera importada
+      if(!isPlaying) loadSong(firstNewIndex, true);
+      // limpiar input
+      fileInput.value = "";
+    }
+
+    // Enviar archivo al servidor /recognize (server hace proxy hacia AudD o ACRCloud)
+    async function recognizeViaServer(file){
+      try {
+        const form = new FormData();
+        // enviamos el archivo (el servidor decidirá si lo reenvía)
+        form.append('file', file, file.name);
+        // opcionalmente le indicamos que queremos el cover
+        form.append('want_cover', 'true');
+
+        const resp = await fetch(RECOGNIZE_ENDPOINT, { method: 'POST', body: form });
+        if(!resp.ok) throw new Error('server respond ' + resp.status);
+        const data = await resp.json();
+        // Esperamos formato: { success:true, result: { title, artist, album, cover } }
+        if(data && data.success && data.result){
+          return {
+            title: data.result.title || null,
+            artist: data.result.artist || null,
+            cover: data.result.cover || null
+          };
+        } else {
+          // no encontrado
+          return null;
+        }
+      } catch(err){
+        console.warn('recognizeViaServer error', err);
+        return null;
+      }
+    }
+
+    // ---------------------------
+    // CAMBIAR PORTADA (botón + DnD sobre cover)
+    // ---------------------------
+    changeCoverBtn.addEventListener('click', ()=> coverInput.click());
+    coverInput.addEventListener('change', async ()=>{
+      const f = coverInput.files[0];
+      if(!f) return;
+      const dataUrl = await fileToDataURL(f);
+      if(songs[current]) songs[current].cover = dataUrl;
+      savePlaylistToStorage();
+      renderPlaylist();
+      coverImg.src = dataUrl;
+      bg.style.backgroundImage = `url('${dataUrl}')`;
+      coverInput.value = "";
+    });
+    ['dragenter','dragover'].forEach(evt => {
+      coverWrap.addEventListener(evt, (e)=>{ e.preventDefault(); coverWrap.style.outline = '3px dashed rgba(255,255,255,0.12)'; });
+    });
+    ['dragleave','dragend','drop'].forEach(evt => {
+      coverWrap.addEventListener(evt, async (e)=>{ e.preventDefault(); coverWrap.style.outline = ''; if(evt==='drop'){ const files = e.dataTransfer.files ? Array.from(e.dataTransfer.files) : []; const img = files.find(f => f.type.startsWith('image/')); if(img && songs[current]){ const dataUrl = await fileToDataURL(img); songs[current].cover = dataUrl; savePlaylistToStorage(); renderPlaylist(); coverImg.src = dataUrl; bg.style.backgroundImage = `url('${dataUrl}')`; } } });
+    });
+
+    // ---------------------------
+    // EDIT metadata UI (simple)
+    // ---------------------------
+    openEditBtn.addEventListener('click', ()=>{
+      const s = songs[current];
+      if(!s) return;
+      const newTitle = prompt('Editar título:', s.title || '');
+      if(newTitle === null) return;
+      const newArtist = prompt('Editar artista:', s.artist || '');
+      if(newArtist === null) return;
+      s.title = newTitle.trim() || s.title;
+      s.artist = newArtist.trim() || s.artist;
+      savePlaylistToStorage();
+      renderPlaylist();
+      loadSong(current,false);
+    });
+
+    // ---------------------------
+    // PERSISTENCIA localStorage (y restauración de idb)
+    // ---------------------------
+    function savePlaylistToStorage(){
+      try {
+        const toStore = songs.map(s=>{
+          return { title:s.title, artist:s.artist, cover:s.cover, src:s.src };
+        });
+        localStorage.setItem('mini-music-player-playlist', JSON.stringify(toStore));
+      } catch(err){
+        console.warn('No se pudo guardar la lista en localStorage', err);
+      }
+    }
+
+    async function loadPlaylistFromStorage(){
+      try {
+        const raw = localStorage.getItem('mini-music-player-playlist');
+        if(!raw){ songs = DEFAULT_SAMPLES.slice(); savePlaylistToStorage(); return; }
+        const parsed = JSON.parse(raw);
+        songs = parsed.map(p => Object.assign({}, p));
+        // intentar precargar object URLs desde IndexedDB
+        for(const s of songs){
+          if(typeof s.src === 'string' && s.src.startsWith('idb:')){
+            const key = s.src.slice(4);
+            try { await getUrlForIdbKey(key); } catch(e){ console.warn('Error resolviendo idb key', e); }
+          }
+        }
+      } catch(err){
+        console.warn('No se pudo cargar playlist desde storage:', err);
+        songs = DEFAULT_SAMPLES.slice();
+      }
+    }
+
+    clearStorageBtn.addEventListener('click', ()=>{
+      if(confirm('¿Borrar la lista guardada (esto no elimina blobs en IndexedDB)?')){
+        localStorage.removeItem('mini-music-player-playlist');
+        songs = DEFAULT_SAMPLES.slice();
+        renderPlaylist();
+        loadSong(0,false);
+      }
+    });
+
+    // ---------------------------
+    // HELPERS
+    // ---------------------------
+    function escapeHtml(str){ if(!str) return ''; return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+    function pictureToBase64(picture){ let data = picture.data; let byteString = ""; for(let i=0;i<data.length;i++) byteString += String.fromCharCode(data[i]); return btoa(byteString); }
+    function fileToDataURL(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=rej; r.readAsDataURL(file); }); }
+
+    // heurística filename -> artist/title
+    function parseFilenameForTitleArtist(name){
+      const clean = name.replace(/\.[^/.]+$/, "");
+      const separators = [' - ', ' — ', ' – ', '-', '—', '–', '_'];
+      for(const sep of separators){
+        if(clean.includes(sep)){
+          const parts = clean.split(sep).map(p=>p.trim()).filter(Boolean);
+          if(parts.length >= 2) return { artist: parts[0], title: parts.slice(1).join(' - ') };
+        }
+      }
+      const t = clean.replace(/\s*\([^\)]*\)\s*$/,'').replace(/\s*\[[^\]]*\]\s*$/,'').trim();
+      return { title: t, artist: null };
+    }
+
+    // ---------------------------
+    // INICIALIZACIÓN
+    // ---------------------------
+    (async function init(){
+      await loadPlaylistFromStorage();
+      renderPlaylist();
+      if(songs.length === 0){ songs = DEFAULT_SAMPLES.slice(); savePlaylistToStorage(); renderPlaylist(); }
+      bg.style.backgroundImage = `url('${songs[0].cover || DEFAULT_COVER}')`;
+      bg.style.opacity = 1;
+      await loadSong(0,false);
+    })();
+
+    // ---------------------------
+    // NOTAS:
+    // - El endpoint /recognize debe implementarse en un servidor que use tu API key (no lo pongas en el frontend).
+    // - Si tu audio es un voice note (opus), algunos servicios aceptan OGG/OPUS; otros no. Si falla el reconocimiento, el servidor puede convertir con ffmpeg antes de reenviar.
+    // ---------------------------
+  </script>
+  <script defer src="1.js"></script>
+    <center><div class="small">Created by Braxx____</div></center>
+</body>
+</html>
