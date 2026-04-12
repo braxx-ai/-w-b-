@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sloWorld - Music Player</title>
+    <link rel="stylesheet" href="msd2.css">
+</head>
+<body>
+    <div class="fullscreen-container">
+        <!-- Fondo con ecualizador -->
+        <div class="background-spectrum">
+            <canvas id="spectrumCanvas"></canvas>
+        </div>
+
+        <!-- Contenedor Principal -->
+        <div class="main-layout">
+            <!-- Panel Izquierdo - Portada y Logo -->
+            <div class="left-panel">
+                <div class="saturn-logo-container">
+                    <svg class="saturn-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="aura" cx="100" cy="100" r="95" fill="none" stroke="url(#auraGradient)" stroke-width="2"/>
+                        <circle cx="100" cy="100" r="40" fill="#4a4a4a" stroke="#2a2a2a" stroke-width="2"/>
+                        <ellipse class="saturn-ring" cx="100" cy="100" rx="70" ry="20" fill="none" stroke="#3a3a3a" stroke-width="3"/>
+                        <defs>
+                            <radialGradient id="auraGradient">
+                                <stop offset="0%" style="stop-color:#ff006e;stop-opacity:0" />
+                                <stop offset="50%" style="stop-color:#00d4ff;stop-opacity:0.3" />
+                                <stop offset="100%" style="stop-color:#ff006e;stop-opacity:0" />
+                            </radialGradient>
+                        </defs>
+                    </svg>
+                </div>
+
+                <div class="album-art-container">
+                    <div id="albumArt" class="album-art">
+                        <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="300" height="300" fill="#1a1a1a"/>
+                            <circle cx="150" cy="150" r="140" fill="#2a2a2a"/>
+                            <circle cx="150" cy="150" r="100" fill="#1a1a1a" stroke="#3a3a3a" stroke-width="2"/>
+                            <circle cx="150" cy="150" r="30" fill="#ff006e" opacity="0.5"/>
+                            <text x="150" y="160" font-size="24" fill="#808080" text-anchor="middle" font-family="Arial">sloWorld</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="equalizer-container">
+                    <h4>Ecualizador</h4>
+                    <div class="equalizer">
+                        <div class="eq-bar" id="eq-1"></div>
+                        <div class="eq-bar" id="eq-2"></div>
+                        <div class="eq-bar" id="eq-3"></div>
+                        <div class="eq-bar" id="eq-4"></div>
+                        <div class="eq-bar" id="eq-5"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel Central - Reproductor -->
+            <div class="center-panel">
+                <div class="logo-title">
+                    <h1 class="main-title">sloWorld</h1>
+                    <p class="tagline">Tu mundo musical melancólico</p>
+                </div>
+
+                <div class="now-playing">
+                    <div class="song-info-main">
+                        <h2 id="songTitle" class="song-title">Selecciona una canción</h2>
+                        <p id="songArtist" class="song-artist">Artista desconocido</p>
+                        <p id="songAlbum" class="song-album">Álbum desconocido</p>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-section">
+                    <div class="progress-bar" id="progressBar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                    <div class="time-info">
+                        <span class="current-time" id="currentTime">0:00</span>
+                        <span class="time-separator">/</span>
+                        <span class="duration" id="duration">0:00</span>
+                    </div>
+                </div>
+
+                <!-- Controles de Reproducción -->
+                <div class="controls-section">
+                    <button id="prevBtn" class="control-btn prev-btn" title="Anterior">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                            <line x1="5" y1="4" x2="5" y2="20"></line>
+                        </svg>
+                    </button>
+
+                    <button id="playBtn" class="control-btn play-btn" title="Reproducir">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    </button>
+
+                    <button id="nextBtn" class="control-btn next-btn" title="Siguiente">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                            <line x1="19" y1="4" x2="19" y2="20"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Volume Control -->
+                <div class="volume-section">
+                    <label for="volumeSlider" class="volume-icon">🔊</label>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="70" class="volume-slider">
+                    <span id="volumeValue" class="volume-value">70%</span>
+                </div>
+
+                <!-- File Upload -->
+                <div class="file-upload-section">
+                    <input type="file" id="fileInput" accept="audio/*" multiple>
+                    <label for="fileInput" class="upload-btn">+ Cargar Canción</label>
+                </div>
+            </div>
+
+            <!-- Panel Derecho - Playlist y Estadísticas -->
+            <div class="right-panel">
+                <div class="stats-container">
+                    <h4>Estadísticas</h4>
+                    <div class="stat-item">
+                        <span class="stat-label">Canciones</span>
+                        <span class="stat-value" id="totalSongs">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Reproducidas</span>
+                        <span class="stat-value" id="songsPlayed">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Tiempo Total</span>
+                        <span class="stat-value" id="totalTime">0:00</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Tiempo Actual</span>
+                        <span class="stat-value" id="sessionTime">0:00</span>
+                    </div>
+                </div>
+
+                <div class="playlist-container">
+                    <h3>Playlist</h3>
+                    <div class="playlist-list" id="playlistContainer">
+                        <!-- Las canciones aparecerán aquí -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Player -->
+        <audio id="audioPlayer"></audio>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Creado por <strong>Braxxy</strong></p>
+            <p><strong>sloWorld</strong> pertenece a <strong>Music Studios Defender</strong></p>
+        </footer>
+    </div>
+
+    <script src="msd3.js"></script>
+</body>
+</html>
