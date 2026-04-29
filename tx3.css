@@ -921,3 +921,230 @@ body {
         font-size: 2rem;
     }
 }
+/* ===== EASTER EGG ===== */
+.easter-egg-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.easter-egg-modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.easter-egg-content {
+    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+    border-radius: 20px;
+    padding: 3rem;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(37, 99, 235, 0.3);
+    position: relative;
+    animation: slideUp 0.4s ease-out;
+    border: 2px solid #2563eb;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.close-easter-egg {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    cursor: pointer;
+    color: #2563eb;
+    transition: all 0.3s ease;
+}
+
+.close-easter-egg:hover {
+    transform: rotate(90deg);
+    color: #7c3aed;
+}
+
+.easter-egg-animation {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.tux-logo {
+    font-size: 5rem;
+    animation: bounce 1s infinite, spin 3s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    from {
+        transform: rotateY(0deg);
+    }
+    to {
+        transform: rotateY(360deg);
+    }
+}
+
+.easter-egg-content h2 {
+    color: #2563eb;
+    font-size: 1.8rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.easter-egg-text {
+    text-align: center;
+    color: #7c3aed;
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
+.easter-egg-message {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(124, 58, 237, 0.1));
+    padding: 1.5rem;
+    border-radius: 15px;
+    border-left: 4px solid #2563eb;
+    margin-bottom: 1.5rem;
+    font-style: italic;
+    color: #1f2937;
+    text-align: center;
+    line-height: 1.8;
+}
+
+.easter-egg-message p {
+    margin: 0.3rem 0;
+}
+
+.easter-egg-facts {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.easter-egg-facts h3 {
+    color: #2563eb;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+}
+
+.easter-egg-facts ul {
+    list-style: none;
+    padding: 0;
+}
+
+.easter-egg-facts li {
+    padding: 0.6rem 0;
+    color: #1f2937;
+    border-bottom: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.easter-egg-facts li:last-child {
+    border-bottom: none;
+}
+
+.easter-egg-facts li:hover {
+    padding-left: 10px;
+    color: #2563eb;
+    font-weight: 500;
+}
+
+.close-easter-egg-btn {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+/* Efecto de confeti */
+.confeti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: caerConfeti 3s linear forwards;
+}
+
+@keyframes caerConfeti {
+    to {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Logo clickeable */
+.logo h1 {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logo h1:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.5));
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .easter-egg-content {
+        padding: 2rem;
+        margin: 1rem;
+    }
+
+    .easter-egg-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .tux-logo {
+        font-size: 3.5rem;
+    }
+
+    .easter-egg-facts li {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .easter-egg-content {
+        padding: 1.5rem;
+        border-radius: 15px;
+    }
+
+    .easter-egg-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .easter-egg-text {
+        font-size: 1rem;
+    }
+
+    .tux-logo {
+        font-size: 3rem;
+    }
+
+    .easter-egg-facts h3 {
+        font-size: 1rem;
+    }
+
+    .easter-egg-facts li {
+        font-size: 0.85rem;
+        padding: 0.5rem 0;
+    }
+}
