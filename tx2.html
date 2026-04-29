@@ -217,6 +217,81 @@
             </div>
         </div>
     </footer>
+    <!-- Agregar este código antes del cierre de </body> -->
+
+<!-- Easter Egg Modal -->
+<div id="easterEggModal" class="easter-egg-modal">
+    <div class="easter-egg-content">
+        <button class="close-easter-egg">&times;</button>
+        <div class="easter-egg-animation">
+            <div class="tux-logo">🐧</div>
+        </div>
+        <h2>¡Encontraste el Easter Egg!</h2>
+        <p class="easter-egg-text">Eres un verdadero Linux lover 🖤</p>
+        <div class="easter-egg-message">
+            <p>"Linux no es solo un sistema operativo,</p>
+            <p>es una filosofía de libertad y comunidad."</p>
+            <p>— Linus Torvalds</p>
+        </div>
+        <div class="easter-egg-facts">
+            <h3>¿Sabías qué?</h3>
+            <ul>
+                <li>💾 Linux nació en 1991 por Linus Torvalds</li>
+                <li>🌍 Alimenta el 96% de los servidores web</li>
+                <li>📱 Android usa el kernel de Linux</li>
+                <li>🚀 SpaceX usa Linux en sus cohetes</li>
+                <li>🏢 Google, Amazon y Microsoft confían en Linux</li>
+            </ul>
+        </div>
+        <button class="btn btn-primary close-easter-egg-btn">Cerrar</button>
+    </div>
+</div>
+
+<!-- Script para el Easter Egg -->
+<script>
+    // Easter Egg del logo
+    document.querySelector('.logo h1').addEventListener('click', function(e) {
+        e.preventDefault();
+        const modal = document.getElementById('easterEggModal');
+        modal.classList.add('show');
+        
+        // Sonido opcional (descomenta si quieres)
+        // const audio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==');
+        // audio.play();
+    });
+
+    // Cerrar modal
+    document.querySelectorAll('.close-easter-egg, .close-easter-egg-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.getElementById('easterEggModal').classList.remove('show');
+        });
+    });
+
+    // Cerrar al hacer clic fuera del modal
+    document.getElementById('easterEggModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('show');
+        }
+    });
+
+    // Efecto de confeti opcional
+    function crearConfeti() {
+        const confeti = document.createElement('div');
+        confeti.classList.add('confeti');
+        confeti.style.left = Math.random() * 100 + '%';
+        confeti.style.background = ['#2563eb', '#7c3aed', '#fbbf24', '#22c55e'][Math.floor(Math.random() * 4)];
+        document.getElementById('easterEggModal').appendChild(confeti);
+        
+        setTimeout(() => confeti.remove(), 3000);
+    }
+
+    // Crear confeti cuando se abre el modal
+    document.querySelector('.logo h1').addEventListener('click', function() {
+        for (let i = 0; i < 20; i++) {
+            setTimeout(crearConfeti, i * 50);
+        }
+    });
+</script>
     <script src="tx4.js"></script>
 </body>
 </html>
