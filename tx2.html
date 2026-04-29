@@ -2,7 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Aprende sobre Linux, el sistema operativo más poderoso del mundo">
+    <meta name="theme-color" content="#2563eb">
     <title>Linux - Sistema Operativo Profesional</title>
     <link rel="stylesheet" href="tx3.css">
 </head>
@@ -28,7 +30,6 @@
         <div class="hero-content">
             <h2 class="fade-in">Bienvenido a Linux</h2>
             <p class="fade-in delay-1">El sistema operativo de código abierto más poderoso del mundo</p>
-            <button class="btn btn-primary fade-in delay-2">Aprende Más</button>
         </div>
         <div class="hero-shape"></div>
     </section>
@@ -136,65 +137,81 @@
     </section>
 
     <!-- Sección de Distribuciones -->
-    <section id="distribuciones" class="distributions">
-        <div class="container">
-            <h3 class="section-title">Distribuciones Populares</h3>
-            <div class="distros-grid">
-                <div class="distro-card fade-in">
-                    <h4>Ubuntu</h4>
-                    <p>La distribución más popular y amigable para principiantes. Perfecta para escritorio y servidores.</p>
-                    <button class="btn btn-secondary">Descargar</button>
-                </div>
-                <div class="distro-card fade-in delay-1">
-                    <h4>Debian</h4>
-                    <p>Estable y confiable. Base de muchas otras distribuciones. Ideal para servidores profesionales.</p>
-                    <button class="btn btn-secondary">Descargar</button>
-                </div>
-                <div class="distro-card fade-in delay-2">
-                    <h4>Fedora</h4>
-                    <p>Distribucion de vanguardia con tecnologías más recientes. Para usuarios experimentados.</p>
-                    <button class="btn btn-secondary">Descargar</button>
-                </div>
-                <div class="distro-card fade-in delay-3">
-                    <h4>CentOS</h4>
-                    <p>Basada en Red Hat. Muy estable para servidores empresariales y aplicaciones críticas.</p>
-                    <button class="btn btn-secondary">Descargar</button>
-                </div>
-                <div class="distro-card fade-in delay-1">
-                    <h4>Arch Linux</h4>
-                    <p>Minimalista y poderosa. Para usuarios avanzados que desean control total.</p>
-                    <button class="btn btn-secondary">Descargar</button>
-                </div>
-                <div class="distro-card fade-in delay-2">
-                    <h4>Linux Mint</h4>
-                    <p>Basada en Ubuntu. Excelente para nuevos usuarios con interfaz intuitiva.</p>
-                    <button class="btn btn-secondary">Descargar</button>
-                </div>
+<section id="distribuciones" class="distributions">
+    <div class="container">
+        <h3 class="section-title">Distribuciones Populares</h3>
+        <div class="distros-grid">
+            <div class="distro-card fade-in">
+                <h4>Ubuntu</h4>
+                <p>La distribución más popular y amigable para principiantes. Perfecta para escritorio y servidores.</p>
+                <a href="https://ubuntu.com/download" target="_blank" class="btn btn-secondary">Descargar</a>
+            </div>
+            <div class="distro-card fade-in delay-1">
+                <h4>Debian</h4>
+                <p>Estable y confiable. Base de muchas otras distribuciones. Ideal para servidores profesionales.</p>
+                <a href="https://www.debian.org/distrib/" target="_blank" class="btn btn-secondary">Descargar</a>
+            </div>
+            <div class="distro-card fade-in delay-2">
+                <h4>Fedora</h4>
+                <p>Distribucion de vanguardia con tecnologías más recientes. Para usuarios experimentados.</p>
+                <a href="https://getfedora.org/" target="_blank" class="btn btn-secondary">Descargar</a>
+            </div>
+            <div class="distro-card fade-in delay-3">
+                <h4>CentOS</h4>
+                <p>Basada en Red Hat. Muy estable para servidores empresariales y aplicaciones críticas.</p>
+                <a href="https://www.centos.org/download/" target="_blank" class="btn btn-secondary">Descargar</a>
+            </div>
+            <div class="distro-card fade-in delay-1">
+                <h4>Arch Linux</h4>
+                <p>Minimalista y poderosa. Para usuarios avanzados que desean control total.</p>
+                <a href="https://archlinux.org/download/" target="_blank" class="btn btn-secondary">Descargar</a>
+            </div>
+            <div class="distro-card fade-in delay-2">
+                <h4>Linux Mint</h4>
+                <p>Basada en Ubuntu. Excelente para nuevos usuarios con interfaz intuitiva.</p>
+                <a href="https://linuxmint.com/download.php" target="_blank" class="btn btn-secondary">Descargar</a>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Sección de Contacto -->
-    <section id="contacto" class="contact">
-        <div class="container">
-            <h3 class="section-title">Mantente en Contacto</h3>
-            <form class="contact-form fade-in">
-                <input type="text" placeholder="Tu Nombre" required>
-                <input type="email" placeholder="Tu Email" required>
-                <textarea placeholder="Tu Mensaje" rows="5" required></textarea>
-                <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
-            </form>
+   <!-- Sección de Contacto -->
+<section id="contacto" class="contact">
+    <div class="container">
+        <h3 class="section-title">Mantente en Contacto</h3>
+        <form class="contact-form fade-in" id="contactForm">
+            <input type="text" id="nombre" placeholder="Tu Nombre" required>
+            <input type="email" id="email" placeholder="Tu Email" required>
+            <textarea id="mensaje" placeholder="Tu Mensaje" rows="5" required></textarea>
+            <button type="submit" class="btn btn-primary">Enviar Mensaje</button>
+        </form>
+        <div id="mensajeExito" style="display:none; margin-top: 20px; padding: 15px; background: rgba(34, 197, 94, 0.2); border-radius: 10px; color: #22c55e; text-align: center; font-weight: bold;">
+            ✓ ¡Mensaje guardado correctamente!
         </div>
-    </section>
+        <a href="#" onclick="verMensajes(); return false;" class="btn btn-secondary" style="margin-top: 20px; display: inline-block;">Ver Mensajes Guardados</a>
+    </div>
+</section>
 
-    <!-- Footer -->
+        <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2026 by Braxx. Todos los derechos reservados.</p>
-            <div class="social-links">
-                <a href="#" class="social-link">Twitter</a>
-                <a href="#" class="social-link">GitHub</a>
-                <a href="#" class="social-link">LinkedIn</a>
+            <div class="footer-content">
+                <p>&copy; Redes sociales del desarrollador.</p>
+                <div class="social-links">
+                    <a href="https://github.com/braxx-ai" target="_blank" class="social-link github-link" title="GitHub">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v 3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                        </svg>
+                        GitHub
+                    </a>
+                    <a href="https://mastodon.social/@brats0212" target="_blank" class="social-link mastodon-link" title="Mastodon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M21.327 8.567c0-4.339-2.843-5.61-2.843-5.61-1.433-.658-3.892-.935-6.468-.956h-.063c-2.576.021-5.035.298-6.468.956 0 0-2.843 1.271-2.843 5.61 0 .859-.034 1.885.041 3.114.204 3.902.956 7.743 5.823 8.667 2.139.372 3.977.472 5.45.416 2.849-.118 4.444-.767 4.444-.767l-.094-2.049s-2.033.648-4.312.717c-2.227.067-4.58-.212-4.944-2.651-.1-.595-.153-1.229-.153-1.888 0 0 2.215.54 5.022.667 1.923.086 3.724-.107 5.556-.32 3.765-.42 7.041-2.586 7.451-4.569.263-1.312.288-3.2.288-4.186z"/>
+                            <path d="M17.95 12.468v5.315h-2.882v-5.161c0-1.435-.605-2.161-1.816-2.161-1.338 0-2.012.865-2.012 2.575v2.816h-2.882v-2.816c0-1.71-.674-2.575-2.012-2.575-1.211 0-1.816.726-1.816 2.161v5.161H3.69v-5.315c0-1.435.368-2.574 1.104-3.421.758-.847 1.75-1.282 2.98-1.282 1.422 0 2.505.56 3.177 1.683l.684 1.148.684-1.148c.672-1.123 1.755-1.683 3.177-1.683 1.23 0 2.222.435 2.98 1.282.736.847 1.104 1.986 1.104 3.421z"/>
+                        </svg>
+                        Mastodon
+                    </a>
+                </div>
             </div>
         </div>
     </footer>
